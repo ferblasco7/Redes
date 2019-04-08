@@ -1,8 +1,9 @@
 %%
-% *ANIDA.M* 
+% *ANIDA.M* ------------------------ Código disponible en github.com/ferblasco7/Redes
+%  ------------------------
 %%
-% *Calcula el NODF y representa gráficamente la red compleja a partir de su matriz de biadyacencia*
-function [NODF,NODFcols,NODFrows]=anida(matriz) %Input: Matriz de biadyacencia; Output: NODF medio, NODF de las columnas y NODF de las filas
+% *CALCULA EL NODF Y REPRESENTA GRÁFICAMENTE LA RED A PARTIR DE SU MATRIZ DE BIADYACENCIA*
+function [NODF,NODFcols,NODFrows]=anida(matriz,dibuja,guarda) %Input: matriz= Matriz de biadyacencia, dibujar= true/false, guardar representaciones= vacio si no se desea; Output: NODF medio, NODF de las columnas y NODF de las filas
 %%
 % *Ordenamos la matriz de mayor a menor total marginal (cantidad de unos) por filas y columnas*
 [~,ordenrows]=sort(sum(matriz,2),'descend');
@@ -16,6 +17,11 @@ matriz(:,1:size(matriz,2))=matriz(:,ordencols);
 c=0; %contador de filas/columnas eliminadas
 %Si hay filas/columnas de ceros, estarán ahora colocadas al final de la
 %matriz, por lo que las buscamos allí:
+if sum(sum(matriz))==0
+    disp('Matriz nula, NODF nulo')
+    NODF=0;NODFcols=0;NODFrows=0;
+    return
+end
 while sum(matriz(size(matriz,1),:))==0
     matriz(size(matriz,1),:)=[];
     c=c+1;
@@ -25,29 +31,36 @@ while sum(matriz(:,size(matriz,2)))==0
     c=c+1;
 end
 %Advertencia de que había filas con ceros:
-if c~=0
-    warning(['Se han eliminado ' num2str(c) ' filas/columnas sólo compuestas de 0'])
-end
+% if c~=0
+%     warning(['Se han eliminado ' num2str(c) ' filas/columnas sólo compuestas de 0'])
+% end
 %% 
 % *Representamos la matriz y el grafo. 
-% (Es muy recomendable comentar esta zona cuando se requiera eficiencia al calcular NODF).*
+if dibuja==true
 figure(1)
-imagesc(matriz) %Representacion de la matriz de datos: Los unos en blanco y los ceros en negro
+pcolor(matriz) %Representacion de la matriz de datos: Los unos en blanco y los ceros en negro
 colormap(gray)
+ax = gca; 
+ax.YDir = 'reverse'; %Invertir dirección habitual del eje y
 set(gca,'xtick',[],'YTick',[]) %Evitamos la numeración de los ejes
+%%%%%%
+colorbar
+%%%%%%
 
 figure(2)
 ady=[zeros(size(matriz,1)),matriz;
     matriz',zeros(size(matriz,2))]; %creamos la matriz de adyacencia de un grafo bipartito (ady) a partir de la de biadyacencia (matriz)
 grafo=graph(ady); %creamos el objeto graph asociado a dicha matriz de adyacencia
-p=plot(grafo,'LineWidth',3,'MarkerSize',20); %representacion del grafo, con parámetros gráficos adecuados para grafos pequeños
+%p=plot(grafo,'LineWidth',3,'MarkerSize',20); %representacion del grafo, con parámetros gráficos adecuados para grafos pequeños
+p=plot(grafo,'LineWidth',2,'MarkerSize',5); %parámetros gráficos adecuados para grafos grandes
 axis off
 nl = p.NodeLabel; %salvar etiquetas de nodos para incluirlas como texto
 p.NodeLabel = ''; %eliminar las etiquetas de nodo originales para evitar su representación (muy pequeñas e ilegibles)
 xd = get(p, 'XData'); %Tomamos las coordenadas de los nodos para escribir sus etiquetas en dichas coordenadas
 yd = get(p, 'YData');
 %Configuración de la aparición del texto
-text(xd,yd,nl,'FontSize',18,'FontWeight','bold' , 'HorizontalAlignment','left','VerticalAlignment','middle','Color','white')
+%text(xd,yd,nl,'FontSize',18,'FontWeight','bold' , 'HorizontalAlignment','left','VerticalAlignment','middle','Color','white') 
+%Indicamos el índice de cada nodo. En grafos grandes, mejor no hacerlo
 
 
 figure(3)
@@ -56,14 +69,25 @@ figure(3)
 %Matlab no incorpora una opción especial para redes bipartitas.
 xd=[repelem(1,size(matriz,1)),repelem(2,size(matriz,2))];
 yd=[size(matriz,1):-1:1,size(matriz,2):-1:1];
-%Parámetros gráficos concretos para la matriz de ejemplo, habría que
-%variarlos para otros grafos
-p=plot(grafo,'XData',xd,'YData',yd,'LineWidth',3,'MarkerSize',20);
+
+%p=plot(grafo,'XData',xd,'YData',yd,'LineWidth',3,'MarkerSize',20); %parametros graficos para grafos pequeños
+p=plot(grafo,'XData',xd,'YData',yd,'LineWidth',1,'MarkerSize',3); %parámetros gráficos adecuados para grafos grandes
+
 nl = p.NodeLabel; 
 p.NodeLabel = ''; %eliminar las etiquetas de nodo originales (muy pequeñas e ilegibles)
 axis off
 %Configuración de la aparición del texto
-text(xd,yd,nl,'FontSize',18,'FontWeight','bold' , 'HorizontalAlignment','left', 'VerticalAlignment','middle','Color','white')
+% text(xd,yd,nl,'FontSize',18,'FontWeight','bold' , 'HorizontalAlignment','left', 'VerticalAlignment','middle','Color','white') 
+%Evitar etiquetas en grafos grandes
+
+%%
+% *Guardamos las imágenes*
+if nargin==3
+print('-f1','matriz','-dpng','-r1000')
+print('-f2','red1','-dpng','-r1000')
+print('-f3','red2','-dpng','-r1000')
+end
+end
 %% 
 % *Calculamos el nestedness (NODF)*
 
@@ -100,9 +124,9 @@ for i=1:size(matriz,2) %npaired de las columnas
     end
 end
 
-%Hallamos NODF a partir de Npaired medio
+%Hallamos NODF a partir de Npaired medio (ponderado)
 
 NODFcols=sum(NPcols)/length(NPcols);
 NODFrows=sum(NProws)/length(NProws);
-NODF=(NODFcols+NODFrows)/2;
+NODF=(sum(NPcols)+sum(NProws))/(length(NProws)+length(NPcols));
 end
