@@ -38,14 +38,11 @@ end
 % *Representamos la matriz y el grafo. 
 if dibuja==true
 figure(1)
-pcolor(matriz) %Representacion de la matriz de datos: Los unos en blanco y los ceros en negro
-colormap(gray)
+imagesc(matriz) %Representacion de la matriz de datos: Los unos en blanco y los ceros en negro
+colormap(flipud(gray))
 ax = gca; 
 ax.YDir = 'reverse'; %Invertir dirección habitual del eje y
-set(gca,'xtick',[],'YTick',[]) %Evitamos la numeración de los ejes
-%%%%%%
-colorbar
-%%%%%%
+axis square
 
 figure(2)
 ady=[zeros(size(matriz,1)),matriz;
