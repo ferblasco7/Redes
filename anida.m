@@ -38,7 +38,7 @@ end
 % *Representamos la matriz y el grafo. 
 if dibuja==true
 figure(1)
-imagesc(matriz) %Representacion de la matriz de datos: Los unos en blanco y los ceros en negro
+imagesc(matriz) %Representacion de la matriz de datos: Los unos en negro y los ceros en blanco
 colormap(flipud(gray))
 ax = gca; 
 ax.YDir = 'reverse'; %Invertir dirección habitual del eje y
